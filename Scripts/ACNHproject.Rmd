@@ -9,11 +9,12 @@ output:
     toc_float: TRUE
 ---
 # Introduction 
-For my final independent project for BIOL 551/L: Computer Modeling, I decided to use Tidy Tuesday Animal Crossing New Horizons user and critic review data. With this data I will be doing asking three questions:  
+For my final independent project for BIOL 551/L: Computer Modeling, I decided to use Tidy Tuesday Animal Crossing New Horizons user and critic review data. With this data I will be asking three questions:  
 1. What words are commonly used in user and critic reviews?  
 2. What is the sentimental value of words for user and critic reviews?  
 3. How did ***bombing*** user reviews affect overall grade?  
-![w/ Special Guest Tom Nook](https://cdn2.scratch.mit.edu/get_image/gallery/25305158_170x100.png)
+![](https://cdn2.scratch.mit.edu/get_image/gallery/25305158_170x100.png)  
+**w/ Special Guest Tom Nook**  
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -45,6 +46,8 @@ critic <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tid
 user_reviews <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/user_reviews.tsv')
 #write.csv(user_reviews,'userreviewsACNH.csv')
 ```
+
+
 
 ```{r echo= FALSE, Colors}
 isabelle.colors = c("#f1b60b","#fbe98b", "#eef4d2")
@@ -95,7 +98,10 @@ userwords<-user_review_words %>% #making the data set for the wordcloud
   filter(n <=720) %>% #added filter for only showing less than 730 reviews
   slice(1:100)
 
-wordcloud2(userwords, shape = 'star', size = 0.25, minSize = 5, rotateRatio = 0, color = rep_len(isabelle.colors, nrow(userwords)),  backgroundColor = isabelle.background, shuffle = FALSE) #creating word cloud with customizations
+user.cloud<-wordcloud2(userwords, shape = 'star', size = 0.25, minSize = 5, rotateRatio = 0, color = rep_len(isabelle.colors, nrow(userwords)),  backgroundColor = isabelle.background, shuffle = FALSE) #creating word cloud with customizations
+saveWidget(user.cloud, "user.html", selfcontained = F)
+webshot("user.html", "user_1.png", delay = 5, vwidth = 480, vheight = 480)
+
 ```
 
 ## Common Critic Words:  
