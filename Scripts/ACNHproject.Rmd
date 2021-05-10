@@ -4,11 +4,16 @@ author: "Kevin Candray"
 date: "4/29/2021"
 output: 
   html_document:
+    theme: readable
     toc: TRUE
     toc_float: TRUE
 ---
 # Introduction 
-For my final independent project for BIOL 551/L : Computer Modeling, I decided to use Tidy Tuesday Animal Crossing New Horizons data. With this data I will be doing a text analysis among the user and critic reviews, astrology chart for villagers birthdays, and do data analysis on how to become a **bell**ionaire.
+For my final independent project for BIOL 551/L: Computer Modeling, I decided to use Tidy Tuesday Animal Crossing New Horizons user and critic review data. With this data I will be doing asking three questions:  
+1. What words are commonly used in user and critic reviews?  
+2. What is the sentimental value of words for user and critic reviews?  
+3. How did ***bombing*** user reviews affect overall grade?  
+![w/ Special Guest Tom Nook](https://cdn2.scratch.mit.edu/get_image/gallery/25305158_170x100.png)
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -27,6 +32,8 @@ library(tidytext)
 library(flair)
 library(wordcloud2)
 library(DescTools)
+library(webshot)
+library("htmlwidgets")
 ```
 
 
@@ -37,16 +44,9 @@ critic <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tid
 
 user_reviews <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/user_reviews.tsv')
 #write.csv(user_reviews,'userreviewsACNH.csv')
-
-#villagers <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/villagers.csv')
-#write.csv(villagers, 'villagersACNH.csv')
-
-#items <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/items.csv')
-#write.csv(items, 'itemsACNH.csv')
 ```
 
-## Setting up color vectors for entire code
-```{r Colors}
+```{r echo= FALSE, Colors}
 isabelle.colors = c("#f1b60b","#fbe98b", "#eef4d2")
 isabelle.background = c("#456d38")
 
@@ -58,7 +58,7 @@ nook.background = c("#65ccb7")
 # Text Analysis: What words are commonly used in User and Critic Reviews for Animal Crossing: New Horizons?  
 
 ## Common User Words:    
-When running this chunk, it yields a tibble table where the words are descending based on the average grade (1-10) from the *user reviews*. For some odd reason the word **"bombing"** was associated with high average reviews. I looked further into why because there are no **bombs** in the game so why are people saying it in the reviews?
+When running this chunk, it yields a tibble table of *user reviews* where the words are descending based on the average grade (1-10). For some odd reason the word **"bombing"** was associated with high average reviews. I looked further into it because there are no **bombs** in the game, so why are people saying it in the reviews?
 ```{r User Reviews TA}
 #wrangle data for a word cloud
 user_review_words<- user_reviews %>% # calling in data set and creating a new one for the wrangling i will be doing
@@ -78,8 +78,6 @@ Yes you heard it here folks, there was indeed a review bombing during the first 
 ```{r bombs}
 bombing_reviews<- user_reviews %>% #calling in orginal data and saving a new one for just the bombing reviews
   filter(str_detect(text,"bombing")) #detect anywhere in the data set where it mentions "bombing"
-
-head(bombing_reviews$text) #view the top part of the bombing reviews text
 ```
 * User *E_Z_E* states, "Ignore the review **bombing** haters."
 * User *Sorites* states, "People who review **bombing** because they can't have separate islands per switch are just being childish."
@@ -127,20 +125,32 @@ criticloud<- critic_review_words %>% #creating data set for wordcloud
   arrange(desc(n)) %>% # arrange so that it is in descending order of (n)
   slice(1:100)
 
-wordcloud2(criticloud, shape = 'star', size = .3, minSize = 5, rotateRatio=0, shuffle = FALSE, color = rep_len(nook.colors, nrow(criticloud)), backgroundColor = nook.background) # this doesnt show when knit but does show in output folder and as runned chunk
+critc.cloud<-wordcloud2(criticloud, shape = 'star', size = .3, minSize = 5, rotateRatio=0, shuffle = FALSE, color = rep_len(nook.colors, nrow(criticloud)), backgroundColor = nook.background) # this doesnt show when knit but does show in output folder and as runned chunk
+saveWidget(critc.cloud, "crit.html", selfcontained = F)
+webshot("crit.html", "crit_1.png", delay = 5, vwidth = 480, vheight = 480)
 ```
 
-  After creating both word clouds, I am still having trouble trying to determine what exactly is the difference between the user and critic clouds. The cloluds look relatively similar, both have some matching words such as, "fun, experience, crafting, and time." So I beg the question . . .
+
+
+After creating both word clouds, I am still having trouble trying to determine what exactly is the difference between the user and critic clouds. The clouds look relatively similar; both have some matching words such as, "fun, experience, crafting, and time." So I beg the question . . .
   
 # Sentiment Text Analysis: What is the sentimental value of words for user and critic reviews?  
+
 For the sentiment analysis, I will be using the already wrangled data previously used for the word clouds, *user_review_words* and *critic_review_words*, to see if there is any positive or negative connotation to their words in their reviews.
   
 ## User Sentiment Analysis  
-```{r User Sentiment Analysis}
-user_sent_word_counts <- user_review_words %>% #calling in user review words and wrangling more for the sentiment analysis, called it someting new
+  
+I wrangled the *user_review_words* data set for sentiment analysis by using the inner join function to get the sentiment value (positive or negative). Finally I used the count function to count the amount of times the words are being said and to sort by their sentiment.
+```{r User Sentiment Analysis1}
+user_sent_word_counts <- user_review_words %>% #calling in user review words and wrangling more for the sentiment analysis, called it something new
   inner_join(get_sentiments()) %>% #join in new column and get sentiments for each word +/-
   count(word, sentiment, sort = TRUE) #count based on word, sentiment, and then sort the words
+```
 
+### Creating a Sentimental Plot :(: Users  
+To represent the sentiment analysis, I used the new the data set I just edited and decided to filter the amount of times a word is being used to greater than 80 because there are a lot of repeated words. I then mutated the n column so that if the sentiment is negative then the value of n will be negative too. Finally created a ggplot with columns and customized it. 
+
+```{r User Sentiment Analysis2}
 user_sent_word_counts %>% #calling in new dataset
   filter(n>80) %>%  #filter the amount of time the word appears, greater than 80
   mutate(n = ifelse(sentiment == "negative",-n,n)) %>% #if the word is negative, make the number negative
@@ -149,8 +159,8 @@ user_sent_word_counts %>% #calling in new dataset
   ggplot(aes(word, n, fill = sentiment))+ #creating ggplot
   geom_col(color = "black")+ #columns
   coord_flip()+ #flip the x and y coords
-  labs(x = "Word",y = "Contribution to Sentiment",
-       title = "wHaT dId ThE uSeRs MeAn", caption = "By: Kevin Candray")+ #labels
+  labs(x = "Word",y = "Contribution to Sentiment", #customizing graph
+       title = "wHaT dId ThE uSeRs MeAn?", caption = "By: Kevin Candray")+ #labels
   scale_fill_manual(values = c("#bd8549", "#ffcf4f"))+
   theme_bw()+
   theme(axis.text = element_text(size=12),
@@ -165,22 +175,32 @@ user_sent_word_counts %>% #calling in new dataset
         plot.background = element_rect(fill = "#eed3a6"),
         legend.background = element_rect(fill = "#eed3a6"))
 ```
-
+![Mocking Intensifies](https://media.tenor.com/images/2fa0d14941a56b9a448bed3a8e336bfd/tenor.gif)  
+  
+In this graph, it is clear that the users were easily split between the game, but why? Many users are saying the game is "fun" and "[enjoyable]" yet so many other users are saying it's "bad" and "limited"; what is it? The positive sentiments do outweigh the negative sentiments but not by much could the ***bombing reviews*** have anything to do with this?  
+  
+  
 ## Critic Sentiment Analysis
-```{r Critic Sentiment Analysis}
-critic_sent_word_counts <- critic_review_words %>% 
-  inner_join(get_sentiments()) %>% 
-  count(word, sentiment, sort = TRUE)
+I ran the same code for the critic and user sentiment analysis, I had to switch some parts of the code around such as the dataframe and filters.
+```{r Critic Sentiment Analysis1}
+critic_sent_word_counts <- critic_review_words %>% #calling in previous critic data set and name it ... word_counts
+  inner_join(get_sentiments()) %>%  #join the words based on sentiment
+  count(word, sentiment, sort = TRUE) #count the number of word, sentiment and sort by positive and negative
+```
 
-critic_sent_word_counts %>% 
-  filter(n>2) %>% 
-  mutate(n = ifelse(sentiment == "negative",-n,n)) %>% 
-  mutate(word = reorder(word, n)) %>% 
-  ggplot(aes(word, n, fill = sentiment))+
-  geom_col(color = "black")+
-  coord_flip()+
-  labs(x = "Word",y = "Contribution to Sentiment",
-       title = "wHaT dId ThE cRiTiCs MeAn", caption = "By: Kevin Candray")+ #labels
+  
+### Creating a sentimental plot :(: Critics  
+In this filter, I chose n to be greater than 2 because there were not that many reviews like the users.It seemed like each review was very unique because not many had repeating words like the user reviews. 
+```{r Critic Sentiment Analysis2}
+critic_sent_word_counts %>% #calling in new data set just made
+  filter(n>2) %>% #filter for (n) is greater than 2 because a majority of them are 2 or less
+  mutate(n = ifelse(sentiment == "negative",-n,n)) %>% #mutate the value of n is the sentiment is negative to a negative n value
+  mutate(word = reorder(word, n)) %>% # change word column so that is reordered based on (n)
+  ggplot(aes(word, n, fill = sentiment))+ #start gg plot with x and y, fill with sentiment 
+  geom_col(color = "black")+ # column graph and making lines black 
+  coord_flip()+ #flip x and y axis
+  labs(x = "Word",y = "Contribution to Sentiment", #customizing graph
+       title = "wHaT dId ThE cRiTiCs MeAn?", caption = "By: Kevin Candray")+ #labels
   scale_fill_manual(values = c("#74bfd4", "#03a279"))+
   theme_bw()+
   theme(axis.text = element_text(size=12),
@@ -195,18 +215,22 @@ critic_sent_word_counts %>%
         plot.background = element_rect(fill = "#fef9f8"),
         legend.background = element_rect(fill = "#fef9f8"))
 ```
+***Positivity*** ![](https://i.pinimg.com/originals/19/eb/02/19eb02c0fa75695807c8756c69938697.gif)  
+  
+In the critic data set, we are not dealing with as many reviews as the users, however these publishers have built a reputation to give their best review possible. When the critics reviewed the Animal Crossing: New Horizons, there was clearly a positive attitude of the game from the critics. Many thought it was "perfect" and "fun" game while only a few had negative sentiments about the it.  
 
-# Data Analysis: Were Critic and User Reviews significantly different based on there score?  
+# Data Analysis: How did the ***bombing*** User reviews of Animal Crossing: New Horizons affect it's overall grade?  
 
 ## User Grade Review
-```{r User Grade Reviews}
-user_reviews %>% 
-  ggplot(aes(grade))+
-  geom_histogram(fill = "#7fa9ff", color= "#000000")+
-      labs(x = "Average Grade Out of 10",y = "Number of Reviews",
-       title = "User Review Ratings in 2020 for ACNH ", caption = "By: Kevin Candray")+ #labels
-  #scale_fill_manual(values = c("#74bfd4", "#03a279"))+
+To clarify what "***bombing*** reviews" meant, I used the *user_reviews* dataframe and piped it into a histogram ggplot with the grade from the review on the x axis and the number of reviews on the y axis.
+```{r User Grade Reviews1}
+user_reviews %>% #calling in original user review data
+  ggplot(aes(grade))+ #plotting the grade of ACNH review on x axis
+  geom_histogram(fill = "#7fa9ff", color= "#000000")+ #histogram with customs
+      labs(x = "Grade from Review (1-10)",y = "Number of Reviews",
+       title = "User Review Grades in 2020 for AC:NH ", caption = "By: Kevin Candray")+ #labels
   theme_bw()+
+  #scale_x_discrete()+
   theme(axis.text = element_text(size=12),
         axis.title = element_text(size=16),
         axis.text.y = element_text(size = 10, color = "#000000"),
@@ -220,20 +244,27 @@ user_reviews %>%
         legend.background = element_rect(fill = "#ff9592"), 
         legend.key = element_rect(fill = "#ff9592"),
         legend.title = element_text(size = 10, color = "#000000"))
+```
+**BOOM** ![](https://i.pinimg.com/originals/b1/6a/53/b16a53b26834f0420689bfb72cf5f4b5.gif)  
+```{r echo=FALSE}
+summary(user_reviews$grade)
+```
+Because of the overwhelming amount of users that gave AC:NH a 0 out of 10 the stats say that the average grade for this video game is 4.2 out of 10.
 
+### User Review Timeline
+For this chunk, I created a timeline of when the reviews where posted along with their average grades to see when the significant amount of 0's first appeared.
+```{r User Grade Reviews2}
 user_reviews %>% 
   group_by(week = floor_date(date, "week")) %>% 
   summarize(nb_reviews = n(),
             avg_grade = mean(grade)) %>%  # couldnt do month because it camew out mid march
-  #filter(nb_reviews >= 20) %>%
   ggplot(aes(week, avg_grade))+
   geom_line(color = "#7fa9ff", size = 1.2)+
   geom_point(aes(size=nb_reviews),
              color = "#0123ac")+
   expand_limits(y=0)+
-    labs(x = "Date in 2020",y = "Average Grade Out of 10",
-       title = "User Average Review Ratings in 2020 for ACNH ", caption = "By: Kevin Candray")+ #labels
-  #scale_fill_manual(values = c("#74bfd4", "#03a279"))+
+    labs(x = "Date(2020)",y = "Grade from AC:NH Review (1-10)",
+       title = "User Average Review Grades in 2020 for AC:NH ", caption = "By: Kevin Candray")+ #labels
   theme_bw()+
   theme(axis.text = element_text(size=12),
         axis.title = element_text(size=16),
@@ -250,43 +281,18 @@ user_reviews %>%
         legend.title = element_text(size = 10, color = "#000000"))
 
 ```
+Right as the game released, many fans supported the game with good reviews, however by the end of March there was a significant amount of reviews that graded it 0. People were extremely disappointed with the game because the game felt unfinished to the fans.   
+ 
+As a player of this game, I understand why there is a dip in the grade after late April. During the whole month of April, players are presented with a special event in the game called "bunny day" and it ruins the progress of the game because the event lasted about the entire month. People were not having it near the end of April, or so it shows.  
 
 ## Critc Grade Review
-```{r Critic Grade Reviews}
+Similar to the User Grade Review, I did the same for the critic reviews. 
+```{r Critic Grade Reviews1}
 critic %>% 
   ggplot(aes(grade))+
   geom_histogram(color = "black", fill ="#047f7d" )+
-        labs(x = "Average Grade Out of 10",y = "Number of Reviews",
-       title = "User Review Ratings in 2020 for ACNH ", caption = "By: Kevin Candray")+ #labels
-  #scale_fill_manual(values = c("#74bfd4", "#03a279"))+
-  theme_bw()+
-  theme(axis.text = element_text(size=12),
-        axis.title = element_text(size=16),
-        axis.text.y = element_text(size = 10, color = "#000000"),
-        axis.text.x = element_text(size = 9, color ="#000000" ),
-        panel.grid.major = element_blank(),
-        plot.caption = element_text(hjust = 0.5),
-        plot.title = element_text(hjust = 0.5),
-        panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill ="#fffcc6" ),
-        plot.background = element_rect(fill = "#f4f433"),
-        legend.background = element_rect(fill = "#f4f433"), 
-        legend.key = element_rect(fill = "#f4f433"),
-        legend.title = element_text(size = 10, color = "#000000"))
-
-critic %>% 
-  group_by(week = floor_date(date, "week")) %>% 
-  summarize(nb_reviews = n(),
-            avg_grade = mean(grade)) %>%  # couldnt do month because it came out mid march
-  #filter(nb_reviews >= 0) %>%
-  ggplot(aes(week, avg_grade))+
-  geom_line(color = "#047f7d", size = 1.2)+
-  geom_point(aes(size=nb_reviews),
-             color = "#64ba60")+
-  expand_limits(y=0)+
-    labs(x = "Date in 2020",y = "Average Grade Out of 100",
-       title = "User Average Review Ratings in 2020 for ACNH ", caption = "By: Kevin Candray")+ #labels
-  #scale_fill_manual(values = c("#74bfd4", "#03a279"))+
+        labs(x = "Grade from AC:NH Review",y = "Number of Reviews",
+       title = "Critic Review Grade in 2020 for AC:NH ", caption = "By: Kevin Candray")+ #labels
   theme_bw()+
   theme(axis.text = element_text(size=12),
         axis.title = element_text(size=16),
@@ -302,5 +308,43 @@ critic %>%
         legend.key = element_rect(fill = "#f4f433"),
         legend.title = element_text(size = 10, color = "#000000"))
 ```
+```{r echo=FALSE}
+summary(critic$grade)
+```
+The summary of the grades from the reviews yields that the critics, on average, gave it a score of 90 out of 100. Because publications didn't experience a review *bombing* the results were skewed right.  
+
+### Critic Review Timeline  
+I used the same code from the User review to reprsent the Critic reviews similarly. 
+```{r Critic Grade Reviews2}
+critic %>% 
+  group_by(week = floor_date(date, "week")) %>% 
+  summarize(nb_reviews = n(),
+            avg_grade = mean(grade)) %>%  # couldnt do month because it came out mid march
+  ggplot(aes(week, avg_grade))+
+  geom_line(color = "#047f7d", size = 1.2)+
+  geom_point(aes(size=nb_reviews),
+             color = "#64ba60")+
+  expand_limits(y=0)+
+    labs(x = "Date (2020)",y = "Average Grade Out of 100", #customs for graph
+       title = "User Average Review Ratings in 2020 for AC:NH ", caption = "By: Kevin Candray")+ #labels
+  theme_bw()+
+  theme(axis.text = element_text(size=12),
+        axis.title = element_text(size=16),
+        axis.text.y = element_text(size = 10, color = "#000000"),
+        axis.text.x = element_text(size = 9, color ="#000000" ),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0.5),
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill ="#fffcc6" ),
+        plot.background = element_rect(fill = "#f4f433"),
+        legend.background = element_rect(fill = "#f4f433"), 
+        legend.key = element_rect(fill = "#f4f433"),
+        legend.title = element_text(size = 10, color = "#000000"))
+```
+One could say that there was a small review *bombing* at the very beginning, when the game released, however they were not all zero's with negative sentiments. The trend continued to thrive for critic reviews bu having positive words to say followed by a high grade.  
+
+![](https://media2.giphy.com/media/h8ISB2nUVITEWjVgGo/200.gif)  
+***THANK YOU!***
 
 
