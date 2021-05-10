@@ -1,0 +1,306 @@
+---
+title: "Animal Crossing Final"
+author: "Kevin Candray"
+date: "4/29/2021"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+---
+# Introduction 
+For my final independent project for BIOL 551/L : Computer Modeling, I decided to use Tidy Tuesday Animal Crossing New Horizons data. With this data I will be doing a text analysis among the user and critic reviews, astrology chart for villagers birthdays, and do data analysis on how to become a **bell**ionaire.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	fig.path = "../Output/",
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+## Loading in the libraries
+```{r Libs}
+library(tidyverse)
+library(here)
+library(lubridate)
+library(tidytext)
+library(flair)
+library(wordcloud2)
+library(DescTools)
+```
+
+
+## Reading and saving all the data 
+```{r data}
+critic <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/critic.tsv')
+#write.csv(critic, 'criticdfACNH.csv')
+
+user_reviews <- readr::read_tsv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/user_reviews.tsv')
+#write.csv(user_reviews,'userreviewsACNH.csv')
+
+#villagers <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/villagers.csv')
+#write.csv(villagers, 'villagersACNH.csv')
+
+#items <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/items.csv')
+#write.csv(items, 'itemsACNH.csv')
+```
+
+## Setting up color vectors for entire code
+```{r Colors}
+isabelle.colors = c("#f1b60b","#fbe98b", "#eef4d2")
+isabelle.background = c("#456d38")
+
+nook.colors = c("#8a5123", "#e1803f", "#4d2517")
+nook.background = c("#65ccb7")
+```
+
+
+# Text Analysis: What words are commonly used in User and Critic Reviews for Animal Crossing: New Horizons?  
+
+## Common User Words:    
+When running this chunk, it yields a tibble table where the words are descending based on the average grade (1-10) from the *user reviews*. For some odd reason the word **"bombing"** was associated with high average reviews. I looked further into why because there are no **bombs** in the game so why are people saying it in the reviews?
+```{r User Reviews TA}
+#wrangle data for a word cloud
+user_review_words<- user_reviews %>% # calling in data set and creating a new one for the wrangling i will be doing
+  unnest_tokens(word, text) %>% #splitting text column into tokens aka words
+  anti_join(stop_words, by = "word") %>% #not counting stop words from the english words
+  count(user_name, date, grade, word) # count (n) based on usernames words
+
+user_review_words %>% # call in data set
+  group_by(word) %>% # group by word
+  summarize(avg_grade = mean(grade), #summarize based on average grade and the amount of reviews each word is in 
+            nb_reviews = n()) %>% 
+  filter(nb_reviews >=50) %>% #filter the number of reviews to >= 50
+  arrange(desc(avg_grade)) #arrange in descending order based on avg_grade
+```
+### There was a **bombing**?  
+Yes you heard it here folks, there was indeed a review bombing during the first few weeks of the games release. With this chunk I will pipe the dataset to show me the reviews that contain the word **"bombing"**  
+```{r bombs}
+bombing_reviews<- user_reviews %>% #calling in orginal data and saving a new one for just the bombing reviews
+  filter(str_detect(text,"bombing")) #detect anywhere in the data set where it mentions "bombing"
+
+head(bombing_reviews$text) #view the top part of the bombing reviews text
+```
+* User *E_Z_E* states, "Ignore the review **bombing** haters."
+* User *Sorites* states, "People who review **bombing** because they can't have separate islands per switch are just being childish."
+* User *Earthquakemass* states, "I dont see why people are coming in a review **bombing** it with 0's metacritic should do something about this because its really becoming a problem."
+
+***TO BE CONTINUED IN DATA ANALYSIS :)..................................***   
+  
+### Making a Wordcloud: wHaT dId ThE uSeRs SaY?  
+When making the WordCloud, I noted that there were a couple of words that kept repeating such as the title of the game **Animal Crossing: New Horizons** so I decided to leave them out of the wordcloud by adding a filter of less than or equal to 730 user reviews. 
+
+```{r User Word Cloud}
+userwords<-user_review_words %>% #making the data set for the wordcloud
+  count(word) %>% #count the number of words
+  arrange(desc(n)) %>% #arrange the words from descending order based on (n)
+  filter(n <=720) %>% #added filter for only showing less than 730 reviews
+  slice(1:100)
+
+wordcloud2(userwords, shape = 'star', size = 0.25, minSize = 5, rotateRatio = 0, color = rep_len(isabelle.colors, nrow(userwords)),  backgroundColor = isabelle.background, shuffle = FALSE) #creating word cloud with customizations
+```
+
+## Common Critic Words:  
+Similar to the User Reviews for **ACNH**, Critic reviews also had a couple of words that came up consistently such as the title of the game, and the word "game". I filtered the word *critic_review_words* data so that the number of reviews must be less than or equal to 25.  
+```{r Critic Reviews}
+#wrangle critic data 
+critic_review_words<- critic %>%#calling in critic data and naming it to something specific for wrangling
+  unnest_tokens(word, text) %>% #unnest words from text column and create seperate column for each word 
+  anti_join(stop_words, by = "word") %>% #do not add stop words to the word column 
+  count(publication, date, grade, word) #count based on publications each with their words
+######## separate pipe so that it is possible to view when knit ###########
+critic_review_words %>% #calling in dataframe just wrangled
+  group_by(word) %>% #group by word
+  summarize(avg_grade = mean(grade), #summarize function for average grade and the number of reviews by n
+            nb_reviews = n()) %>% 
+  filter(nb_reviews <=25) %>% #filter so that the number of reveiws is less than 25
+  arrange(desc(nb_reviews)) #arrange table by descending nb_reviews
+```
+On the bright side, there is no "bombing" here so the data analysis won't look too wonky when we look at the reviews holistically.  
+
+
+### Making a WordCloud: WhAt DiD tHe CrItIcS sAy?
+```{r Critic Word Cloud}
+criticloud<- critic_review_words %>% #creating data set for wordcloud
+  count(word) %>% #count (n) word
+  filter(n <=25) %>% #filter so that n is less than or equal to 25
+  arrange(desc(n)) %>% # arrange so that it is in descending order of (n)
+  slice(1:100)
+
+wordcloud2(criticloud, shape = 'star', size = .3, minSize = 5, rotateRatio=0, shuffle = FALSE, color = rep_len(nook.colors, nrow(criticloud)), backgroundColor = nook.background) # this doesnt show when knit but does show in output folder and as runned chunk
+```
+
+  After creating both word clouds, I am still having trouble trying to determine what exactly is the difference between the user and critic clouds. The cloluds look relatively similar, both have some matching words such as, "fun, experience, crafting, and time." So I beg the question . . .
+  
+# Sentiment Text Analysis: What is the sentimental value of words for user and critic reviews?  
+For the sentiment analysis, I will be using the already wrangled data previously used for the word clouds, *user_review_words* and *critic_review_words*, to see if there is any positive or negative connotation to their words in their reviews.
+  
+## User Sentiment Analysis  
+```{r User Sentiment Analysis}
+user_sent_word_counts <- user_review_words %>% #calling in user review words and wrangling more for the sentiment analysis, called it someting new
+  inner_join(get_sentiments()) %>% #join in new column and get sentiments for each word +/-
+  count(word, sentiment, sort = TRUE) #count based on word, sentiment, and then sort the words
+
+user_sent_word_counts %>% #calling in new dataset
+  filter(n>80) %>%  #filter the amount of time the word appears, greater than 80
+  mutate(n = ifelse(sentiment == "negative",-n,n)) %>% #if the word is negative, make the number negative
+  mutate(word = reorder(word, n)) %>% # reorder based on (n)
+  #slice(1:100) %>% 
+  ggplot(aes(word, n, fill = sentiment))+ #creating ggplot
+  geom_col(color = "black")+ #columns
+  coord_flip()+ #flip the x and y coords
+  labs(x = "Word",y = "Contribution to Sentiment",
+       title = "wHaT dId ThE uSeRs MeAn", caption = "By: Kevin Candray")+ #labels
+  scale_fill_manual(values = c("#bd8549", "#ffcf4f"))+
+  theme_bw()+
+  theme(axis.text = element_text(size=12),
+        axis.title = element_text(size=16),
+        axis.text.y = element_text(size = 10, color = "#000000"),
+        axis.text.x = element_text(size = 9, color ="#000000" ),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0.5),
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill ="#f7f4d5" ),
+        plot.background = element_rect(fill = "#eed3a6"),
+        legend.background = element_rect(fill = "#eed3a6"))
+```
+
+## Critic Sentiment Analysis
+```{r Critic Sentiment Analysis}
+critic_sent_word_counts <- critic_review_words %>% 
+  inner_join(get_sentiments()) %>% 
+  count(word, sentiment, sort = TRUE)
+
+critic_sent_word_counts %>% 
+  filter(n>2) %>% 
+  mutate(n = ifelse(sentiment == "negative",-n,n)) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ggplot(aes(word, n, fill = sentiment))+
+  geom_col(color = "black")+
+  coord_flip()+
+  labs(x = "Word",y = "Contribution to Sentiment",
+       title = "wHaT dId ThE cRiTiCs MeAn", caption = "By: Kevin Candray")+ #labels
+  scale_fill_manual(values = c("#74bfd4", "#03a279"))+
+  theme_bw()+
+  theme(axis.text = element_text(size=12),
+        axis.title = element_text(size=16),
+        axis.text.y = element_text(size = 10, color = "#000000"),
+        axis.text.x = element_text(size = 9, color ="#000000" ),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0.5),
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill ="#f7f4d5" ),
+        plot.background = element_rect(fill = "#fef9f8"),
+        legend.background = element_rect(fill = "#fef9f8"))
+```
+
+# Data Analysis: Were Critic and User Reviews significantly different based on there score?  
+
+## User Grade Review
+```{r User Grade Reviews}
+user_reviews %>% 
+  ggplot(aes(grade))+
+  geom_histogram(fill = "#7fa9ff", color= "#000000")+
+      labs(x = "Average Grade Out of 10",y = "Number of Reviews",
+       title = "User Review Ratings in 2020 for ACNH ", caption = "By: Kevin Candray")+ #labels
+  #scale_fill_manual(values = c("#74bfd4", "#03a279"))+
+  theme_bw()+
+  theme(axis.text = element_text(size=12),
+        axis.title = element_text(size=16),
+        axis.text.y = element_text(size = 10, color = "#000000"),
+        axis.text.x = element_text(size = 9, color ="#000000" ),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0.5),
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill ="#f7b4d2" ),
+        plot.background = element_rect(fill = "#ff9592"),
+        legend.background = element_rect(fill = "#ff9592"), 
+        legend.key = element_rect(fill = "#ff9592"),
+        legend.title = element_text(size = 10, color = "#000000"))
+
+user_reviews %>% 
+  group_by(week = floor_date(date, "week")) %>% 
+  summarize(nb_reviews = n(),
+            avg_grade = mean(grade)) %>%  # couldnt do month because it camew out mid march
+  #filter(nb_reviews >= 20) %>%
+  ggplot(aes(week, avg_grade))+
+  geom_line(color = "#7fa9ff", size = 1.2)+
+  geom_point(aes(size=nb_reviews),
+             color = "#0123ac")+
+  expand_limits(y=0)+
+    labs(x = "Date in 2020",y = "Average Grade Out of 10",
+       title = "User Average Review Ratings in 2020 for ACNH ", caption = "By: Kevin Candray")+ #labels
+  #scale_fill_manual(values = c("#74bfd4", "#03a279"))+
+  theme_bw()+
+  theme(axis.text = element_text(size=12),
+        axis.title = element_text(size=16),
+        axis.text.y = element_text(size = 10, color = "#000000"),
+        axis.text.x = element_text(size = 9, color ="#000000" ),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0.5),
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill ="#f7b4d2" ),
+        plot.background = element_rect(fill = "#ff9592"),
+        legend.background = element_rect(fill = "#ff9592"), 
+        legend.key = element_rect(fill = "#ff9592"),
+        legend.title = element_text(size = 10, color = "#000000"))
+
+```
+
+## Critc Grade Review
+```{r Critic Grade Reviews}
+critic %>% 
+  ggplot(aes(grade))+
+  geom_histogram(color = "black", fill ="#047f7d" )+
+        labs(x = "Average Grade Out of 10",y = "Number of Reviews",
+       title = "User Review Ratings in 2020 for ACNH ", caption = "By: Kevin Candray")+ #labels
+  #scale_fill_manual(values = c("#74bfd4", "#03a279"))+
+  theme_bw()+
+  theme(axis.text = element_text(size=12),
+        axis.title = element_text(size=16),
+        axis.text.y = element_text(size = 10, color = "#000000"),
+        axis.text.x = element_text(size = 9, color ="#000000" ),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0.5),
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill ="#fffcc6" ),
+        plot.background = element_rect(fill = "#f4f433"),
+        legend.background = element_rect(fill = "#f4f433"), 
+        legend.key = element_rect(fill = "#f4f433"),
+        legend.title = element_text(size = 10, color = "#000000"))
+
+critic %>% 
+  group_by(week = floor_date(date, "week")) %>% 
+  summarize(nb_reviews = n(),
+            avg_grade = mean(grade)) %>%  # couldnt do month because it came out mid march
+  #filter(nb_reviews >= 0) %>%
+  ggplot(aes(week, avg_grade))+
+  geom_line(color = "#047f7d", size = 1.2)+
+  geom_point(aes(size=nb_reviews),
+             color = "#64ba60")+
+  expand_limits(y=0)+
+    labs(x = "Date in 2020",y = "Average Grade Out of 100",
+       title = "User Average Review Ratings in 2020 for ACNH ", caption = "By: Kevin Candray")+ #labels
+  #scale_fill_manual(values = c("#74bfd4", "#03a279"))+
+  theme_bw()+
+  theme(axis.text = element_text(size=12),
+        axis.title = element_text(size=16),
+        axis.text.y = element_text(size = 10, color = "#000000"),
+        axis.text.x = element_text(size = 9, color ="#000000" ),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0.5),
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill ="#fffcc6" ),
+        plot.background = element_rect(fill = "#f4f433"),
+        legend.background = element_rect(fill = "#f4f433"), 
+        legend.key = element_rect(fill = "#f4f433"),
+        legend.title = element_text(size = 10, color = "#000000"))
+```
+
+
