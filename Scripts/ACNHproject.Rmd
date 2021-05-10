@@ -98,9 +98,9 @@ userwords<-user_review_words %>% #making the data set for the wordcloud
   filter(n <=720) %>% #added filter for only showing less than 730 reviews
   slice(1:100)
 
-user.cloud<-wordcloud2(userwords, shape = 'star', size = 0.25, minSize = 5, rotateRatio = 0, color = rep_len(isabelle.colors, nrow(userwords)),  backgroundColor = isabelle.background, shuffle = FALSE) #creating word cloud with customizations
-saveWidget(user.cloud, "user.html", selfcontained = F)
-webshot("user.html", "user_1.png", delay = 5, vwidth = 480, vheight = 480)
+wordcloud2(userwords, shape = 'star', size = 0.25, minSize = 5, rotateRatio = 0, color = rep_len(isabelle.colors, nrow(userwords)),  backgroundColor = isabelle.background, shuffle = FALSE) #creating word cloud with customizations
+#saveWidget(user.cloud, "user.html", selfcontained = F)
+#webshot("user.html", "user_1.png", delay = 5, vwidth = 480, vheight = 480)
 
 ```
 
@@ -255,7 +255,7 @@ user_reviews %>% #calling in original user review data
 ```{r echo=FALSE}
 summary(user_reviews$grade)
 ```
-Because of the overwhelming amount of users that gave AC:NH a 0 out of 10 the stats say that the average grade for this video game is 4.2 out of 10.
+Because of the overwhelming amount of users that gave AC:NH a 0 out of 10 the stats say that the average grade for this video game is 4.2 out of 10 the data is skewed left.
 
 ### User Review Timeline
 For this chunk, I created a timeline of when the reviews where posted along with their average grades to see when the significant amount of 0's first appeared.
@@ -348,7 +348,7 @@ critic %>%
         legend.key = element_rect(fill = "#f4f433"),
         legend.title = element_text(size = 10, color = "#000000"))
 ```
-One could say that there was a small review *bombing* at the very beginning, when the game released, however they were not all zero's with negative sentiments. The trend continued to thrive for critic reviews bu having positive words to say followed by a high grade.  
+One could say that there was a small review *bombing* at the very beginning, when the game released, however they were not all zero's with negative sentiments. The trend continued to thrive for critic reviews by having positive words to say and a high grade.  
 
 ![](https://media2.giphy.com/media/h8ISB2nUVITEWjVgGo/200.gif)  
 ***THANK YOU!***
