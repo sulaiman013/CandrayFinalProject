@@ -1,7 +1,8 @@
 # Kevin Candray Final Project
 ## Tidy Tuesday 2020: Week 19: Animal Crossing: New Horizons data sets:  
 * User Reviews
-* Critic Reviews
+* Critic Reviews  
+The data came from Metacritic
 
 ## *Folders*
 ### [Data](https://github.com/Biol551-CSUN/CandrayFinalProject/tree/main/Data)
