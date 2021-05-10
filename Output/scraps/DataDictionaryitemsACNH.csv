@@ -1,0 +1,17 @@
+﻿Variable,Class,Description
+num_id,Integer,"The numerical ID, some ID's will be repeated because some items have multiple recipe items"
+id,Character,The character ID
+name,Character,Item  name
+category,Character,Category name of the item
+orderable,Logical,Is the item orderable from the catalog
+sell_value,Integer,Sell value
+sell_currency,Character,Sell currency
+buy_value,Integer,Buy value
+buy_currency,Character,Buy currency
+sources,Character,Way to obtain from person or place
+customizable,Character,Is it customizable?
+recipe,Integer,Recipe number
+recipe_id,Character,Recipe ID
+games_id,Character,Game ID
+id_full,Character,Full Character ID
+images_url,Character,Link of image of item
