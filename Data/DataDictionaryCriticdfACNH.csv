@@ -1,0 +1,5 @@
+﻿Variable,Class,Description
+grade,Integer,A score between 0 and 100 that the critics gave for the overall gamplay experience 
+publication,Character,Who published the review
+text,Character,The raw test of the critic review describing the gameplay experience
+date,Double,When was the critic review published

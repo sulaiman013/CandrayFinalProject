@@ -1,0 +1,5 @@
+﻿Variable,Class,Description
+grade,Integer,Score of user review on a scale from 1-10
+user_name,Character,Username of person who wrote the review
+text,Character,Text of the review from the user
+date,Character,Date review was published
