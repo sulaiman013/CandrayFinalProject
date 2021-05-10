@@ -3,6 +3,7 @@
 * User Reviews
 * Critic Reviews    
 The data came from Metacritic  
+For this project I will be attempting to find key differences between user and critic reviews by running multiple analyses. While in the process of finding key differences I found an interesting occurrence in the user data, let's look into it!  
 
 ## This repository has:  
 ### [Data](https://github.com/Biol551-CSUN/CandrayFinalProject/tree/main/Data)
