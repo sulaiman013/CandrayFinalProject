@@ -3,14 +3,20 @@
 * User Reviews
 * Critic Reviews
 
-## Folders
+## *Folders*
 ### [Data](https://github.com/Biol551-CSUN/CandrayFinalProject/tree/main/Data)
-#### Content: 
+#### **Content:** 
 * [User Data](https://github.com/Biol551-CSUN/CandrayFinalProject/blob/main/Data/userreviewsACNH.csv)  
-* [Critic Data](https://github.com/Biol551-CSUN/CandrayFinalProject/blob/main/Data/criticdfACNH.csv)  
+* [Critic Data](https://github.com/Biol551-CSUN/CandrayFinalProject/blob/main/Data/criticdfACNH.csv) 
+* [User Data Dictionary](https://github.com/Biol551-CSUN/CandrayFinalProject/blob/main/Data/DataDictionaryUserReviewsACNH.csv) 
 * [Critic Data Dictionary](https://github.com/Biol551-CSUN/CandrayFinalProject/blob/main/Data/DataDictionaryCriticdfACNH.csv)  
-* [User Data Dictionary](https://github.com/Biol551-CSUN/CandrayFinalProject/blob/main/Data/DataDictionaryUserReviewsACNH.csv)  
 
-### [Output](https://github.com/Biol551-CSUN/CandrayFinalProject/tree/main/Output)
+### [Output](https://github.com/Biol551-CSUN/CandrayFinalProject/tree/main/Output)  
+#### **Content:**  
+* [Folder of Scraps](https://github.com/Biol551-CSUN/CandrayFinalProject/tree/main/Output/scraps)
+* [Folder of Graphs](https://github.com/Biol551-CSUN/CandrayFinalProject/tree/main/Output/Graphs)
 
-### [Scripts](https://github.com/Biol551-CSUN/CandrayFinalProject/tree/main/Scripts)
+### [Scripts](https://github.com/Biol551-CSUN/CandrayFinalProject/tree/main/Scripts)  
+#### **Content:**
+* [RMarkdown](https://github.com/Biol551-CSUN/CandrayFinalProject/blob/main/Scripts/ACNHproject.Rmd)  
+* [HTML](https://github.com/Biol551-CSUN/CandrayFinalProject/blob/main/Scripts/ACNHproject.html)
